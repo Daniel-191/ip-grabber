@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="content">
+            <h1>Welcome!</h1>
+            <p class="subtitle">Thanks for visiting our website.</p>
+
+            <div class="info-box">
+                <h2>About This Site</h2>
+                <p>This is a demonstration website for educational purposes.</p>
+                <p>Feel free to explore and learn about web technologies!</p>
+            </div>
+
+            <div class="features">
+                <div class="feature">
+                    <h3>🌐 Web Technologies</h3>
+                    <p>Learn about HTTP requests and responses</p>
+                </div>
+                <div class="feature">
+                    <h3>🔒 Network Security</h3>
+                    <p>Understand how data flows across the internet</p>
+                </div>
+                <div class="feature">
+                    <h3>📊 Data Tracking</h3>
+                    <p>Discover how websites collect visitor information</p>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <div class="disclaimer">
+                <p><strong>Educational Disclaimer:</strong> This is an educational demonstration of web tracking.
+                Visit information (IP address, browser type, timestamp) is being logged for learning purposes.</p>
+                <p>Licensed under the <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a></p>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
