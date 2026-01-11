@@ -19,9 +19,9 @@ class Config:
     # Change this to a secure random token in production
     ADMIN_TOKEN = os.getenv('ADMIN_TOKEN', 'change_me_' + secrets.token_hex(8))
 
-    # Logging preferences
-    LOG_TO_CONSOLE = True
-    CONSOLE_VERBOSE = True  # Show detailed visitor info in console
+    # Logging preferences (console logging disabled - use Discord instead)
+    LOG_TO_CONSOLE = False
+    CONSOLE_VERBOSE = False
 
     # Discord Webhook
     DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1446831459024240694/xhfxSUVoAhaD0Eysu150mnqY7dLz7Qfpulu6dOkm4KotxZ6xXD3LKLn3U47k6pbOGcEV"

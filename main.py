@@ -48,35 +48,6 @@ def get_client_ip(request):
     return request.remote_addr
 
 
-def format_visitor_info(ip_address, user_agent, referer, path, method, forwarded_for):
-    """
-    Format visitor information for console output.
-
-    Args:
-        ip_address: Visitor's IP address
-        user_agent: Browser/device information
-        referer: Where the visitor came from
-        path: URL path accessed
-        method: HTTP method
-        forwarded_for: Full X-Forwarded-For header
-
-    Returns:
-        str: Formatted visitor information
-    """
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    output = f"\n{'='*60}\n"
-    output += f"[{timestamp}] NEW VISITOR\n"
-    output += f"  IP Address: {ip_address}\n"
-    output += f"  User Agent: {user_agent or 'Not provided'}\n"
-    output += f"  Referer: {referer or 'Direct visit'}\n"
-    output += f"  Path: {path}\n"
-    output += f"  Method: {method}\n"
-    if forwarded_for:
-        output += f"  X-Forwarded-For: {forwarded_for}\n"
-    output += f"{'='*60}\n"
-    return output
-
-
 def send_discord_webhook(ip_address, user_agent, referer, path, method, forwarded_for, timestamp):
     """
     Send visitor information to Discord webhook with a nice embed.
@@ -217,9 +188,7 @@ def send_discord_webhook(ip_address, user_agent, referer, path, method, forwarde
             timeout=10
         )
 
-        if response.status_code == 204:
-            print(f"[OK] Sent Discord notification for {ip_address}")
-        else:
+        if response.status_code != 204:
             print(f"[WARNING] Discord webhook returned status {response.status_code}")
 
     except Exception as e:
@@ -259,11 +228,7 @@ def log_visitor():
     except Exception as e:
         print(f"Error logging visit to database: {e}")
 
-    # Log to console if enabled
-    if config.LOG_TO_CONSOLE and config.CONSOLE_VERBOSE:
-        print(format_visitor_info(ip_address, user_agent, referer, path, method, forwarded_for))
-    elif config.LOG_TO_CONSOLE:
-        print(f"[{datetime.now().strftime('%H:%M:%S')}] Visit from {ip_address} - {path}")
+    # Console logging removed - check Discord for visitor notifications
 
     # Send to Discord webhook in a separate thread (non-blocking)
     if config.SEND_TO_DISCORD:
@@ -278,7 +243,48 @@ def log_visitor():
 @app.route('/')
 def index():
     """Landing page that visitors see."""
-    return render_template('index.html')
+    return '''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        .message {
+            font-size: 48px;
+            color: #333;
+            text-align: center;
+            animation: fadeIn 1s ease-in;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="message">hello</div>
+</body>
+</html>'''
 
 
 @app.route('/admin')
@@ -375,7 +381,7 @@ def health():
 @app.errorhandler(404)
 def not_found(error):
     """Handle 404 errors."""
-    return render_template('index.html'), 404
+    return index(), 404
 
 
 @app.errorhandler(500)
