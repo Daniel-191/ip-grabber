@@ -1,4 +1,4 @@
-no docs figure it out yourself 😛😛😛😛😛
+no docs it ain't that hard 😛😛😛😛😛
 
 EXTRACTOR.html - Grabs IP and other info and sends to webhook
 
